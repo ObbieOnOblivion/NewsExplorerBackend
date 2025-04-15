@@ -1,22 +1,59 @@
-const connectDB = require('./config/db.js');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
 const { createLogger, transports } = require('winston');
-const { expressMiddleware } = require('apm-nodejs-express-client');
+const { corsOptions } = require("./config/corsConfig.js")
 
 // Initialize Express
 const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(mongoSanitize());
+// Add this before your routes
+
+app.use((req, _, next) => {
+  const sanitize = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+
+    // Handle prototype pollution
+    if (obj.constructor?.name !== 'Object') {
+      delete obj.__proto__;
+      delete obj.constructor;
+    }
+
+    Object.keys(obj).forEach(key => {
+      // Block all MongoDB operators and dangerous keys
+      if (key.startsWith('$') || 
+          key.includes('.') || 
+          ['__proto__', 'constructor', 'prototype'].includes(key)) {
+        delete obj[key];
+      } 
+      // Recursively sanitize
+      else if (typeof obj[key] === 'object') {
+        sanitize(obj[key]);
+      }
+      // Handle array elements
+      else if (Array.isArray(obj[key])) {
+        obj[key].forEach(item => sanitize(item));
+      }
+      // Block dangerous value types
+      else if (typeof obj[key] === 'function') {
+        delete obj[key];
+      }
+    });
+  };
+
+  ['body', 'query', 'params'].forEach(prop => {
+    if (req[prop]) sanitize(req[prop]);
+  });
+
+  next();
+});
 
 // i want to write this a little bit better
 if (process.env.NODE_ENV === 'production') {
@@ -32,11 +69,6 @@ app.use(limiter);
 
 // Compression
 app.use(compression());
-
-// APM Performance Monitoring
-if (process.env.NODE_ENV === 'production') {
-  app.use(expressMiddleware());
-}
 
 // Winston logger setup
 const logger = createLogger({
@@ -61,6 +93,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-
-// Connect to Database
-connectDB();

@@ -3,19 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "scripts": {
-      "start": "node src/server.js",
-      "dev": "nodemon src/server.js",
-      "test": "jest",
-      "lint": "eslint .",
-      "format": "prettier --write .",
-      "prepare": "husky install"
-    }
+    "dev": "NODE_ENV=development nodemon src/server.js",
+    "start": "NODE_ENV=production node src/server.js",
+    "build": "npm install --production && npm prune --production",
+    "test": "NODE_ENV=test jest --coverage --detectOpenHandles",
+    "test:watch": "NODE_ENV=test jest --watch",
+    "lint": "eslint 'src/**/*.js' --fix",
+    "lint:typescript": "eslint 'src/**/*.ts' --fix",
+    "format": "prettier --write 'src/**/*.{js,ts,json}'",
+    "migrate": "node src/utils/migrations.js",
+    "seed": "NODE_ENV=development node src/scripts/seedDatabase.js",
+    "docker:build": "docker build -t my-express-app .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env my-express-app",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "compression": "^1.8.0",
     "cors": "^2.8.5",
@@ -44,5 +48,9 @@
     "prettier": "^3.5.3",
     "supertest": "^7.1.0",
     "ts-jest": "^29.3.1"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "description": ""
 }
