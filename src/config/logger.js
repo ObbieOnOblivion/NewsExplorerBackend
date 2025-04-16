@@ -1,4 +1,5 @@
 const { createLogger, format, transports } = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file'); // Add this line
 const { combine, timestamp, printf, colorize, errors } = format;
 
 const logFormat = printf(({ level, message, timestamp, stack }) => {
@@ -17,7 +18,7 @@ const logger = createLogger({
     new transports.Console(),
     new transports.File({ filename: 'logs/error.log', level: 'error' }),
     new transports.File({ filename: 'logs/combined.log' }),
-    new transports.DailyRotateFile({
+    new DailyRotateFile({ // Changed from transports.DailyRotateFile
       filename: 'logs/application-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,

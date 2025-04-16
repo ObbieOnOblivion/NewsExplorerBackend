@@ -17,6 +17,21 @@
     "docker:run": "docker run -p 3000:3000 --env-file .env my-express-app",
     "prepare": "husky install"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/config/"
+    ],
+    "setupFilesAfterEnv": ["./jest.setup.js"],
+    "testMatch": [
+      "**/__tests__/**/*.test.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)"
+    ],
+    "transform": {
+      "^.+\\.(t|j)sx?$": "ts-jest"
+    }
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
