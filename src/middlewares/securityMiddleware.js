@@ -1,40 +1,81 @@
-const express = require('express'); // Add this at the top
-const helmet = require('helmet');
-const cors = require('cors');
-const { corsOptions } = require('../config/corsConfig');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
+import crypto from 'crypto';
+import compression from 'compression';
+import cors from 'cors';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import session from 'express-session';
+import helmet from 'helmet';
+import corsOptions from '../config/corsConfig.js';
+import setupRedisStore from '../config/redisConfig.js';
+import {
+  getCspConfig,
+  helmetConfig,
+  rateLimitConfig,
+  bodyParserConfig
+} from '../config/securityConfig.js';
 
-// Rate limiter config
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100
-});
+const securityMiddlewares = async (app) => {
+  // Initialize logger shortcut
+  const logger = app.locals?.logger || console;
 
-// Body parser config
-const bodyParserConfig = {
-  json: { limit: '10kb' },
-  urlencoded: { extended: true }
-};
+  // 1. Security Headers Middleware
+  app.use(helmet({
+    ...helmetConfig,
+    contentSecurityPolicy: (req, res) => getCspConfig(req, res),
+  }));
 
-// CORS logger middleware
-const corsLogger = (req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && !corsOptions.origin.some(o => o === origin)) {
-    console.warn(`Blocked CORS request from: ${origin}`);
+  // 2. Session Configuration
+  try {
+    const store = await setupRedisStore(app);
+    logger.info(`Session store initialized: ${store ? 'Redis' : 'Memory'}`);
+
+    app.use(session({
+      store: store || new session.MemoryStore(),
+      secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: (process.env.SESSION_TTL || 86400) * 1000,
+      },
+      name: 'secureSessionId',
+      rolling: true,
+      unset: 'destroy',
+      genid: () => `${crypto.randomBytes(16).toString('hex')}-${Date.now().toString(36)}`,
+    }));
+  } catch (err) {
+    logger.error('Session initialization failed:', err);
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Critical: Session setup failed in production');
+    }
+    // In development, continue with MemoryStore
+    app.use(session({
+      store: new session.MemoryStore(),
+      secret: 'dev-secret',
+      // ... other session config
+    }));
   }
-  next();
-};
 
-// Security middleware setup
-const securityMiddlewares = (app) => {
-  app.use(helmet());
+  // 3. Core Middlewares
   app.use(cors(corsOptions));
-  app.use(corsLogger);
   app.use(express.json(bodyParserConfig.json));
   app.use(express.urlencoded(bodyParserConfig.urlencoded));
-  app.use(limiter);
+  
+  // 4. Rate Limiting
+  app.use(rateLimit({
+    ...rateLimitConfig,
+    handler: (req, res) => {
+      logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+      res.status(429).json({ error: 'Too many requests' });
+    }
+  }));
+
+  // 5. Compression
   app.use(compression());
+
+  // Error handling middleware would go here
 };
 
-module.exports = securityMiddlewares;
+export default securityMiddlewares;

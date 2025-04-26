@@ -1,39 +1,60 @@
-const express = require('express');
-const securityMiddlewares = require('./middlewares/securityMiddleware');
-const sanitizeMiddleware = require('./middlewares/sanitizeMiddleware');
-const logger = require('./config/logger'); // Import from config
+import dotenv from 'dotenv';
+import express from 'express';
+dotenv.config();
+
+import logger from './config/logger.js';
+import errorHandler from './middlewares/errorHandler.js';
+import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
+import securityMiddlewares from './middlewares/securityMiddleware.js';
+import AppError from './utils/error/AppError.js';
 
 const app = express();
 
-// Attach logger to app
 app.locals.logger = logger;
 
-// Apply security middlewares
+//maybe consolidate the way you code
 securityMiddlewares(app);
-
-// Apply sanitization middleware
 app.use(sanitizeMiddleware);
 
-// Production monitoring
+// lets go pro
 if (process.env.NODE_ENV === 'production') {
-  require('newrelic');
+  // require('newrelic');
+  app.locals.logger.info("lets go pro");
 }
 
-// Test route
-app.get('/health', (req, res) => {
-  req.app.locals.logger.info('Health check route accessed');
-  res.status(200).json({ status: 'OK' });
+// tests bellow
+app.get('/health/crash-sync', () => {
+  throw new Error('Synchronous error test');
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  req.app.locals.logger.error({
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method
+app.get('/health/crash-sync-400', () => {
+  throw new AppError('Bad request test', 400, {
+    field: 'example',
+    reason: 'Invalid input',
   });
-  res.status(500).json({ error: 'Something went wrong!' });
 });
 
-module.exports = app;
+app.get('/health/crash-async', async (_, __, next) => {
+  try {
+    await Promise.reject(new AppError('Async error test', 503));
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/health', async (req, res) => {
+  const storeHealthy = req.sessionStore 
+    ? await new Promise(resolve => {
+        req.sessionStore.all(err => resolve(!err));
+      })
+    : true;
+    
+  res.status(storeHealthy ? 200 : 503).json({
+    status: storeHealthy ? 'ok' : 'unhealthy',
+    store: storeHealthy ? 'connected' : 'disconnected'
+  });
+});
+
+// handle errors
+app.use(errorHandler);
+export default app;

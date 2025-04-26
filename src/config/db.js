@@ -1,24 +1,23 @@
-const mongoose = require('mongoose');
-const config = require('./index');
+import mongoose from 'mongoose';
+import config from './index.js';
 
 let cachedConnection = null;
 
-async function connectDB() {
+export async function connectDB() {
   if (cachedConnection) {
     return cachedConnection;
   }
 
-  // Support both old and new config structures
-  const connectionString = config.mongoUri || config.mongoose.url;
+  const connectionString = config.mongoUri || config.mongoose?.url;
   const options = config.mongoose?.options || {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   };
 
   try {
     const connection = mongoose.connect(connectionString, options);
     cachedConnection = connection;
-    
+
     await connection;
     console.log('MongoDB connected successfully');
     return connection;
@@ -37,7 +36,4 @@ mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
 });
 
-module.exports = {
-  connectDB,
-  mongoose
-};
+export { mongoose };

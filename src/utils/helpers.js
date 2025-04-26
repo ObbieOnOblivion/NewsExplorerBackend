@@ -1,65 +1,77 @@
-function safeStringify(obj, space = 2, depth = 0, maxDepth = 20, seen = new WeakSet()) {
-    // Handle primitive values immediately
-    if (obj === null || typeof obj !== 'object') {
-      return JSON.stringify(obj, null, space);
+function safeStringify(obj, options = {}) {
+  const {
+    space = 2,
+    maxDepth = 20,
+    redactProto = true,
+    handleErrors = true
+  } = options;
+
+  const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype", "$set"]);
+  const seen = new WeakSet();
+  const context = {
+    currentDepth: 0,
+    maxDepth
+  };
+
+  function serializer(key, value, currentDepth = 0) {
+    // Depth limit check
+    if (currentDepth > maxDepth) {
+      return "[Max Depth Exceeded]";
     }
-  
-    // Depth limit protection
-    if (depth > maxDepth) {
-      return JSON.stringify('[Max Depth Exceeded]', null, space);
+
+    // Prototype pollution protection
+    if (redactProto && key && BLOCKED_KEYS.has(key)) {
+      return "[PROTOTYPE BLOCKED]";
     }
-  
-    // Handle circular references
-    if (seen.has(obj)) {
-      return JSON.stringify('[Circular Reference]', null, space);
+
+    // Circular reference detection
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return "[Circular Reference]";
+      }
+      seen.add(value);
     }
-    seen.add(obj);
-  
-    const replacer = (key, value) => {
-      // Skip prototype pollution vectors
-      if (key === '__proto__' || key === 'constructor') {
-        return '[PROTOTYPE BLOCKED]';
-      }
-  
-      // Handle binary data
-      if (value instanceof Buffer || value?.[Symbol.asyncIterator]) {
-        return '[Binary Data]';
-      }
-  
-      // Structured error handling
-      if (value instanceof Error) {
-        return {
-          __error__: true,
-          name: value.name,
-          message: value.message,
-          stack: value.stack
-        };
-      }
-  
-      // Recursive handling for nested objects
-      if (typeof value === 'object' && value !== null) {
-        return JSON.parse(safeStringify(value, space, depth + 1, maxDepth, seen));
-      }
-  
-      return value;
-    };
-  
-    try {
-      // Special handling for Arrays to preserve structure
-      if (Array.isArray(obj)) {
-        return `[${obj.map(item => 
-          JSON.parse(safeStringify(item, space, depth + 1, maxDepth, seen))
-        ).join(', ')}]`;
-      }
-  
-      return JSON.stringify(obj, replacer, space);
-    } catch (err) {
-      return JSON.stringify({
-        __stringifyError__: true,
-        message: err.message,
-        type: Object.prototype.toString.call(obj)
-      }, null, space);
+
+    // Special handling for Error objects
+    if (value instanceof Error) {
+      return {
+        __error__: true,
+        name: value.name,
+        message: value.message,
+        stack: value.stack
+      };
+    }
+
+    // Binary data handling
+    if (value instanceof Buffer || value?.[Symbol.asyncIterator]) {
+      return "[Binary Data]";
+    }
+    
+  if (typeof value === "object" && value !== null) {
+    context.currentDepth++;
+    
+    if (context.currentDepth > context.maxDepth) {
+      context.currentDepth--;
+      return "[Max Depth Exceeded]";
     }
   }
-  
-  module.exports = { safeStringify };
+
+    return value;
+  }
+
+
+  try {
+    // Initialize depth tracking
+    const initialReplacer = (key, value) => serializer(key, value, 0);
+    return JSON.stringify(obj, initialReplacer, space);
+  } catch (err) {
+    if (!handleErrors) throw err;
+    return JSON.stringify({
+      __stringifyError__: true,
+      message: err.message,
+      type: typeof obj
+    });
+  }
+}
+
+export { safeStringify };

@@ -1,21 +1,14 @@
-const logger = require('../config/logger');
-const { safeStringify } = require('../utils/helpers'); // Assume this exists
-
-// delete obj.__proto__
+import logger from '../config/logger.js';
+import {safeStringify} from '../utils/helpers.js';
 
 class SecuritySanitizer {
-  static #dangerousKeys = new Set([
-    '__proto__', 'constructor', 'prototype'
-  ]);
+  static #dangerousKeys = new Set(['__proto__', 'constructor', 'prototype']);
 
   static #isDangerous(key) {
-    return key.startsWith('$') || 
-           key.includes('.') || 
-           this.#dangerousKeys.has(key);
+    return key.startsWith('$') || key.includes('.') || this.#dangerousKeys.has(key);
   }
 
   static #sanitizeObject(obj, path = '', req) {
-    
     if (!obj || typeof obj !== 'object') return;
 
     if (obj.constructor?.name !== 'Object') {
@@ -24,9 +17,9 @@ class SecuritySanitizer {
       return;
     }
 
-    Object.keys(obj).forEach(key => {
+    Object.keys(obj).forEach((key) => {
       const currentPath = path ? `${path}.${key}` : key;
-      
+
       if (this.#isDangerous(key)) {
         this.#logDangerousKey(key, currentPath, req);
         delete obj[key];
@@ -36,8 +29,7 @@ class SecuritySanitizer {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         this.#sanitizeObject(obj[key], currentPath, req);
       }
-      
-      // Handle array elements
+
       if (Array.isArray(obj[key])) {
         obj[key].forEach((item, index) => {
           this.#sanitizeObject(item, `${currentPath}[${index}]`, req);
@@ -49,10 +41,9 @@ class SecuritySanitizer {
   static #neutralizeObject(obj) {
     Object.setPrototypeOf(obj, null);
     delete obj.constructor;
-    
-    // Full cleanup for confirmed malicious objects
-    if (['__proto__', 'constructor'].some(k => k in obj)) {
-      Object.keys(obj).forEach(key => delete obj[key]);
+
+    if (['__proto__', 'constructor'].some((k) => k in obj)) {
+      Object.keys(obj).forEach((key) => delete obj[key]);
     }
   }
 
@@ -63,14 +54,14 @@ class SecuritySanitizer {
         method: req.method,
         path: req.path,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       },
       maliciousPayload: {
         type: obj.constructor?.name,
         path: path,
-        value: safeStringify(obj)
+        value: safeStringify(obj),
       },
-      action: 'neutralized'
+      action: 'neutralized',
     });
   }
 
@@ -80,23 +71,27 @@ class SecuritySanitizer {
       requestContext: {
         method: req.method,
         path: req.path,
-        ip: req.ip
+        ip: req.ip,
       },
       maliciousInput: {
         key: key,
         path: path,
-        type: 'mongo_operator_or_prototype_access'
+        type: 'mongo_operator_or_prototype_access',
       },
-      action: 'removed'
+      action: 'removed',
     });
   }
-  
+
   static middleware() {
     return (req, _, next) => {
-      ['body', 'query', 'params'].forEach(prop => {
+      ['body', 'query', 'params'].forEach((prop) => {
         if (req[prop]) {
           logger.debug(`Sanitizing request ${prop}`, {
-            requestId: req.id // Assume you have request ID
+            requestInfo: {
+              method: req.method,
+              path: req.path,
+              ip: req.ip,
+            },
           });
           this.#sanitizeObject(req[prop], prop, req);
         }
@@ -106,4 +101,5 @@ class SecuritySanitizer {
   }
 }
 
-module.exports = SecuritySanitizer.middleware();
+// Export the middleware directly
+export default SecuritySanitizer.middleware();

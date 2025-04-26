@@ -1,19 +1,23 @@
-require('dotenv').config();
-const Joi = require('joi');
+// src/config/index.js
 
-// Your existing configuration (preserved)
+import dotenv from 'dotenv';
+import Joi from 'joi';
+
+dotenv.config();
+
+// Legacy default values
 const legacyConfig = {
   env: process.env.NODE_ENV || 'development',
-  port: process.env.PORT || 3000,
+  port: parseInt(process.env.PORT) || 3000,
   mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/professional-express-app',
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
-  rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
-  rateLimitMax: process.env.RATE_LIMIT_MAX || 100,
+  rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+  rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX) || 100,
   newRelicLicenseKey: process.env.NEW_RELIC_LICENSE_KEY,
-  apmServiceName: process.env.APM_SERVICE_NAME || 'professional-express-app'
+  apmServiceName: process.env.APM_SERVICE_NAME || 'professional-express-app',
 };
 
-// Add validation (optional but recommended)
+// Joi schema for validation
 const envVarsSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default(legacyConfig.env),
   PORT: Joi.number().default(legacyConfig.port),
@@ -23,31 +27,30 @@ const envVarsSchema = Joi.object({
   RATE_LIMIT_MAX: Joi.number().default(legacyConfig.rateLimitMax),
   NEW_RELIC_LICENSE_KEY: Joi.string().optional(),
   APM_SERVICE_NAME: Joi.string().default(legacyConfig.apmServiceName),
-  LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug').default('info') // New
+  LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug').default('info'),
 }).unknown();
 
 const { value: validatedConfig, error } = envVarsSchema.validate(process.env);
 
 if (error) {
   console.error('Config validation error:', error.message);
-  // Don't throw to maintain backward compatibility
+  // Don’t throw to keep compatibility
 }
 
-// Merge configurations
+// Merge defaults with validated values
 const config = {
   ...legacyConfig,
   ...validatedConfig,
-  // Add new properties
   logLevel: validatedConfig.LOG_LEVEL,
-  mongoose: { // For better DB config organization
+  mongoose: {
     url: legacyConfig.mongoUri,
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000
-    }
-  }
+      serverSelectionTimeoutMS: 5000,
+    },
+  },
 };
 
-module.exports = config;
+export default config;
