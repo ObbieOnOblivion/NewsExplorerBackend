@@ -7,6 +7,7 @@ import errorHandler from './middlewares/errorHandler.js';
 import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
 import securityMiddlewares from './middlewares/securityMiddleware.js';
 import AppError from './utils/error/AppError.js';
+import router from './routes/index.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.locals.logger = logger;
 //maybe consolidate the way you code
 securityMiddlewares(app);
 app.use(sanitizeMiddleware);
+app.use(router)
 
 // lets go pro
 if (process.env.NODE_ENV === 'production') {

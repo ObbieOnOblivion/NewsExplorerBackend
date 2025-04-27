@@ -36,7 +36,6 @@ async function startServer() {
 
   try {
     await connectDB();
-
     // Apply middleware and routes HERE
     app.get('/', (req, res) => res.send('Server is running'));
 
