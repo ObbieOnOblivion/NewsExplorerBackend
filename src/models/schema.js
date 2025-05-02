@@ -49,22 +49,11 @@ const UserSchema = new mongoose.Schema({
     minlength: 8,
     select: false
   },
-  firstName: {
+  Name: {
     type: String,
     required: true,
     trim: true,
     maxlength: 50
-  },
-  lastName: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 50
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin', 'moderator'],
-    default: 'user'
   },
   lastLogin: Date,
   passwordChangedAt: Date,

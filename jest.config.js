@@ -8,7 +8,14 @@ export default {
     '/node_modules/(?!(your-module-name)/)'
   ],
   moduleFileExtensions: ['js', 'json'],
-  setupFilesAfterEnv: ['./jest.setup.js']
+  setupFilesAfterEnv: ['./jest.setup.js'],
+  collectCoverage: true,
+  coverageThreshold: {global:{
+    branches: 70,
+    functions: 70,
+    lines: 70,
+    statements: 70,
+  }},
   // testEnvironment: 'node',
   // setupFilesAfterEnv: ['./jest.setup.js'],
   // globalTeardown: './jest.teardown.js',

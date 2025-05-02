@@ -1,74 +1,118 @@
- 
+// import dotenv from 'dotenv';
+// dotenv.config();
 
-/**
- * Safely stringifies objects with circular reference and depth protection
- * @param {any} obj - The object to stringify
- * @param {number} [space=2] - Number of spaces for pretty-printing (JSON.stringify)
- * @param {number} [depth=0] - Current recursion depth (internal use)
- * @param {number} [maxDepth=20] - Maximum allowed recursion depth
- * @param {WeakSet} [seen=new WeakSet()] - Track circular references (internal use)
- * @returns {string} Safe JSON string or error message
- */
+// import { MongoDBAdapter } from '../src/adapters/MongoDBAdapter.js';
+// import app from './app.js';
+// import logger from './config/logger.js';
+
+// app.locals.logger = logger;
+
+// // Initialize MongoDB Adapter
+// const dbAdapter = new MongoDBAdapter();
+// dbAdapter.setLogger(logger)
+
+// /**
+//  * Connect to MongoDB using the adapter
+//  */
+// async function connectAdapter() {
+//   try {
+//     await dbAdapter.connect({
+//       connectionString: process.env.MONGODB_URI,
+//       dbName: 'testdb', // or extract from URI
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true
+//     });
+    
+//     logger.info('✅ MongoDB connected via adapter');
+//     app.locals.db = dbAdapter;
+//   } catch (err) {
+//     logger.error('❌ MongoDB connection error:', err);
+//     throw err;
+//   }
+// }
+
+// async function gracefulShutdown(exitCode = 0) {
+//   try {
+//     app.locals.logger.info('🛑 Shutting down...');
+//     await dbAdapter.disconnect();
+//     server.close(() => {
+//       app.locals.logger.info('✅ Server closed');
+//       if (process.env.NODE_ENV !== 'test') {
+//         process.exit(exitCode);
+//       }
+//     });
+//   } catch (err) {
+//     app.locals.logger.error('Shutdown error:', err);
+//     if (process.env.NODE_ENV !== 'test') {
+//       process.exit(1);
+//     }
+//   }
+// }
+
+// /**
+//  * Start the server with graceful shutdown handling
+//  */
+// async function startServer() {
+//   const port = Number(process.env.PORT) || 3000;
+
+//   try {
+//     await connectAdapter();
+//     // Basic health check route
+//     app.get('/', (req, res) => res.send('Server is running'));
+    
+//     // Example route using the adapter
+//     app.get('/test-db', async (req, res) => {
+//       try {
+//         // Test database operation
+//         const testDoc = { message: 'Database test', timestamp: new Date() };
+//         const id = await req.app.locals.db.create('testCollection', testDoc);
+//         res.json({ success: true, insertedId: id });
+//       } catch (err) {
+//         res.status(500).json({ error: err.message });
+//       }
+//     });
+
+//     const server = app.listen(port, () => {
+//       app.locals.logger.info(`🚀 Server running on port ${port}`);
+//     });
+
+//     process.on('SIGTERM', () => gracefulShutdown(0));
+//     process.on('SIGINT', () => gracefulShutdown(0)); // For Ctrl+C
+
+//     return server;
+//   } catch (err) {
+//     app.locals.logger.error('🔥 Failed to start server:', err);
+//     await gracefulShutdown(1);
+//   }
+// }
+
+// // Start the server
+// startServer().catch((err) => {
+//   logger.error('💀 Fatal startup error:', err);
+//   process.exit(1);
+// });
+
+// export { app, connectAdapter, startServer, dbAdapter };
 
 
-import dotenv from 'dotenv';
-dotenv.config();
-
-import mongoose from 'mongoose';
 import app from './app.js';
-import logger from './config/logger.js';
-  
-app.locals.logger = logger;
 
-async function connectDB() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    app.locals.logger.info('✅ MongoDB connected');
-  } catch (err) {
-    app.locals.logger.error('❌ MongoDB connection error:', err);
-    throw err; // Re-throw to trigger startup failure
-  }
-}
+const PORT = process.env.PORT || 3000;
 
-// 5. Server startup
-async function startServer() {
-  const port = process.env.PORT || 3000;
-
-  try {
-    await connectDB();
-    // Apply middleware and routes HERE
-    app.get('/', (req, res) => res.send('Server is running'));
-
-    const server = app.listen(port, () => {
-      app.locals.logger.info(`🚀 Server running on port ${port}`);
-    });
-
-    // Graceful shutdown handlers
-    process.on('SIGTERM', () => {
-      app.locals.logger.info('🛑 Received SIGTERM. Closing server...');
-      server.close(() => {
-        app.locals.logger.info('✅ Server closed');
-        process.exit(0);
-      });
-    });
-
-    process.on('unhandledRejection', (err) => {
-      app.locals.logger.error('⚠️ Unhandled rejection:', err);
-      server.close(() => process.exit(1));
-    });
-
-    return server;
-  } catch (err) {
-    app.locals.logger.error('🔥 Failed to start server:', err);
-    process.exit(1);
-  }
-}
-
-// 6. Start the server
-startServer().catch((err) => {
-  logger.error('💀 Fatal startup error:', err);
-  process.exit(1);
+const server = app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log('Try these commands:');
+  console.log(`curl "http://localhost:${PORT}/inspect?test=123"`);
+  console.log(`curl -X POST http://localhost:${PORT}/inspect -H "Content-Type: application/json" -d '{"key":"value"}'`);
 });
 
-export {app, connectDB, startServer};
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
 
+export { app, server };

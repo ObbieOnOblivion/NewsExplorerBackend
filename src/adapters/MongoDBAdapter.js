@@ -1,49 +1,84 @@
 import { MongoClient } from 'mongodb';
 
 export class MongoDBAdapter {
-  // Private fields
   #client = null;
   #db = null;
-  #isConnected = false;
+  #logger = null;
 
-  constructor() {
-    // No public properties needed
+  /**
+   * Set logger instance
+   * @param {object} logger - Logger instance
+   */
+  setLogger(logger) {
+    this.#logger = logger;
   }
 
+  /**
+   * Connect to MongoDB
+   * @param {object} config - Configuration object
+   * @param {string} config.connectionString - MongoDB connection string
+   * @param {string} config.dbName - Database name
+   * @param {string} [config.username] - Optional username
+   * @param {string} [config.password] - Optional password
+   */
   async connect(config) {
     try {
-      this.#client = new MongoClient(config.connectionString, {
-        tls: true,
-        auth: {
-          username: config.username,
-          password: config.password
-        },
+      // throw new Error("ddjdjdjdj")
+      // Set logger if provided in config
+      if (config.logger) {
+        this.#logger = config.logger;
+      }
+
+      const options = {
         retryWrites: true,
         retryReads: true,
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 10000
-      });
-      
+      };
+
+      // Only add auth if credentials are provided
+      if (config.username && config.password) {
+        options.auth = {
+          username: config.username,
+          password: config.password
+        };
+      }
+
+      // Only enable TLS for remote connections
+      if (!config.connectionString.includes('localhost') && 
+          !config.connectionString.includes('127.0.0.1')) {
+        options.tls = true;
+      }
+
+      this.#client = new MongoClient(config.connectionString, options);
       await this.#client.connect();
       this.#db = this.#client.db(config.dbName);
-      this.#isConnected = true;
-      this.#log('MongoDB connected successfully');
-      return true;
+      this.#log(`Connected to MongoDB: ${config.dbName}`);
+      return this;
     } catch (error) {
-      this.#handleConnectionError(error);
+      this.#handleError('Connection failed', error);
       throw error;
     }
   }
 
+  /**
+   * Disconnect from MongoDB
+   */
   async disconnect() {
-    if (this.#client) {
-      await this.#client.close();
-      this.#client = null;
-      this.#db = null;
-      this.#isConnected = false;
+    try {
+      if (this.#client) {
+        await this.#client.close();
+        this.#log('Disconnected from MongoDB');
+      }
+    } catch (error) {
+      this.#handleError('Disconnection failed', error);
+      throw error;
+    } finally {
+      this.#cleanup();
     }
   }
 
+  // CRUD Operations (unchanged from your original)
   async create(collectionName, data) {
     this.#verifyConnection();
     const collection = this.#getCollection(collectionName);
@@ -86,19 +121,30 @@ export class MongoDBAdapter {
   }
 
   #verifyConnection() {
-    if (!this.#isConnected) {
+    if (!this.#db) {
       throw new Error('Database not connected. Call connect() first.');
     }
   }
 
   #log(message) {
-    console.log(`[MongoDBAdapter] ${message}`);
+    if (this.#logger) {
+      this.#logger.info(`[MongoDBAdapter] ${message}`);
+    } else {
+      console.log(`[MongoDBAdapter] ${new Date().toISOString()} - ${message}`);
+    }
   }
 
-  #handleConnectionError(error) {
-    this.#log(`Connection error: ${error.message}`);
+  #handleError(context, error) {
+    if (this.#logger) {
+      this.#logger.error(`[MongoDBAdapter] ${context}:`, error);
+    } else {
+      console.error(`[MongoDBAdapter] ${new Date().toISOString()} - ${context}:`, error.message);
+    }
+    // this.#cleanup();
+  }
+
+  #cleanup() {
     this.#client = null;
     this.#db = null;
-    this.#isConnected = false;
   }
 }

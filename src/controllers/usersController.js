@@ -1,6 +1,7 @@
 import { User } from '../models/schema.js';
 // import bcrypt from 'bcryptjs';
 // import jwt from 'jsonwebtoken';
+import logger from '../config/logger.js';
 
 class UserController {
   /**
@@ -8,7 +9,9 @@ class UserController {
    */
   async register(req, res, next) {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, Name } = req.body;
+      logger.info(req.headers.nany)
+      logger.info(req.body[0])
       
       // Check if user exists
       const existingUser = await User.findOne({ email });
@@ -20,8 +23,7 @@ class UserController {
       const user = await User.create({
         email,
         password,
-        firstName,
-        lastName
+        Name
       });
 
       // Generate JWT
