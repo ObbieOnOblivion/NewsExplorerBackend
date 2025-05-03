@@ -2,12 +2,12 @@
 // import express from 'express';
 // dotenv.config();
 
-import logger from './config/logger.js';
-import errorHandler from './middlewares/errorHandler.js';
-import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
-import securityMiddlewares from './middlewares/securityMiddleware.js';
-import AppError from './utils/error/AppError.js';
-import router from './routes/index.js';
+// import logger from './config/logger.js';
+// import errorHandler from './middlewares/errorHandler.js';
+// import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
+// import securityMiddlewares from './middlewares/securityMiddleware.js';
+// import AppError from './utils/error/AppError.js';
+// import router from './routes/index.js';
 
 // const app = express();
 
@@ -89,78 +89,67 @@ import router from './routes/index.js';
 
 
 
+// import dotenv from 'dotenv';
+// import express from 'express';
+// dotenv.config();
 
+// import logger from './config/logger.js';
+// import errorHandler from './middlewares/errorHandler.js';
+// import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
+// import securityMiddlewares from './middlewares/securityMiddleware.js';
+// import AppError from './utils/error/AppError.js';
+// import router from './routes/index.js';
+
+// const app = express();
+// app.use(express.json()); // For parsing application/json
+
+// app.use(router)
+
+// app.locals.logger = logger;
+
+// export default app;
+
+
+
+
+
+import dotenv from 'dotenv';
 import express from 'express';
+dotenv.config();
+
+import logger from './config/logger.js';
+import errorHandler from './middlewares/errorHandler.js';
+import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
+import securityMiddlewares from './middlewares/securityMiddleware.js';
+import AppError from './utils/error/AppError.js';
+import router from './routes/index.js';
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+// 1. Security middleware first
 securityMiddlewares(app);
+
+// 2. Body parsing middleware (CRITICAL - must come before routes)
+app.use(express.json()); // For parsing application/json
+app.use(express.urlencoded({ extended: true })); // For parsing form data
+
+// 3. Other middleware
 app.use(sanitizeMiddleware);
-app.use(router)
+app.locals.logger = logger;
 
-// Request logger middleware
-app.use((req, res, next) => {
-  logger.info(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+// 4. Request logger middleware
+const requestLogger = (req, res, next) => {
+  logger.info(`Incoming ${req.method} request to ${req.url}`);
+  logger.debug('Headers:', req.headers);
+  logger.debug('Body:', req.body); // Will now show parsed body
   next();
-});
+};
+app.use(requestLogger);
 
-// Simple GET endpoint to inspect requests
-app.get('/inspect', (req, res) => {
-  res.json({
-    success: true,
-    headers: req.headers,
-    query: req.query,
-    body: req.body, // Will be empty for GET requests
-    timestamp: new Date().toISOString()
-  });
-});
+// 5. Routes (now body parsing will work)
+app.use(router);
 
-// POST endpoint to show body
-app.post('/inspect', (req, res) => {
-  res.json({
-    success: true,
-    received: req.body,
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/health/crash-sync', () => {
-  throw new Error('Synchronous error test');
-});
-
-app.get('/health/crash-sync-400', () => {
-  throw new AppError('Bad request test', 400, {
-    field: 'example',
-    reason: 'Invalid input',
-  });
-});
-
-app.get('/health/crash-async', async (_, __, next) => {
-  try {
-    await Promise.reject(new AppError('Async error test', 503));
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.get('/health', async (req, res) => {
-  const storeHealthy = req.sessionStore 
-    ? await new Promise(resolve => {
-        req.sessionStore.all(err => resolve(!err));
-      })
-    : true;
-  res.status(storeHealthy ? 200 : 503).json({
-    status: storeHealthy ? 'ok' : 'unhealthy',
-    store: storeHealthy ? 'connected' : 'disconnected'
-  });
-});
-
+// 6. Error handler (always last)
 app.use(errorHandler);
-
-
 
 export default app;

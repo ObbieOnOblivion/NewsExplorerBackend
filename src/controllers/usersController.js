@@ -9,32 +9,32 @@ class UserController {
    */
   async register(req, res, next) {
     try {
-      const { email, password, Name } = req.body;
-      logger.info(req.headers.nany)
-      logger.info(req.body[0])
+      const { email, password, name } = req.body;
+      // logger.info(req.headers.nany)
+      // logger.info(req.body[0], req.body)
       
-      // Check if user exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ error: 'Email already in use' });
-      }
+      // // Check if user exists
+      // const existingUser = await User.findOne({ email });
+      // if (existingUser) {
+      //   return res.status(400).json({ error: 'Email already in use' });
+      // }
 
-      // Create new user
-      const user = await User.create({
-        email,
-        password,
-        Name
-      });
+      // // Create new user
+      // const user = await User.create({
+      //   email,
+      //   password,
+      //   name
+      // });
 
-      // Generate JWT
-      const token = user.generateAuthToken();
+      // // Generate JWT
+      // const token = user.generateAuthToken();
 
-      // Remove password from response
-      user.password = undefined;
+      // // Remove password from response
+      // user.password = undefined;
 
       res.status(201).json({
         status: 'success',
-        data: { user, token }
+        data: `${req.header} ---- ${name} -> ${password}`
       });
     } catch (error) {
       next(error);

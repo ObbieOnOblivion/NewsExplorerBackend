@@ -1,15 +1,16 @@
 import { Router } from 'express';
-import userRoutes from './userRoutes.js';
-import articleRoutes from './articleRoutes.js';
-import commentRoutes from './commentRoutes.js';
+import express from 'express';
+import usersRouter from '../routes/userRoutes.js'
 
+import usersController from "../controllers/usersController.js"
 const router = Router();
 
-// API status endpoint
-router.get('/status', (req, res) => res.json({ status: 'OK' }));
+// Base routes
+router.use(express.json()); // Parse JSON bodies
+router.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Feature routes
-router.use('/users', userRoutes);
-router.use('/articles', articleRoutes);
-// router.use('/', commentRoutes); // comments are nested under articles
+// router.route('/users').post(usersController.register);         // POST /api/users
+router.use('/users', usersRouter);
+// router.use('/articles', articlesRouter);
+
 export default router;

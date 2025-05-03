@@ -178,9 +178,9 @@ const CommentSchema = new mongoose.Schema({
 CommentSchema.add(BaseSchema);
 
 // Indexes
-UserSchema.index({ email: 1 });
+// UserSchema.index({ email: 1 });
 ArticleSchema.index({ title: 'text', content: 'text' });
-ArticleSchema.index({ slug: 1 });
+// ArticleSchema.index({ slug: 1 });
 ArticleSchema.index({ author: 1 });
 ArticleSchema.index({ status: 1, publishedAt: 1 });
 CommentSchema.index({ article: 1 });

@@ -1,23 +1,12 @@
 import { Router } from 'express';
-import UserController from '../controllers/usersController.js';
+import usersController from '../controllers/usersController.js';
 // import { validateRegister, validateLogin } from '../middlewares/validation.js';
-// import { authenticate } from '../middlewares/auth.js';
 
-const userRoutes = Router();
+const usersRouter = Router();
 
-// Public routes
-userRoutes.post('/register', UserController.register); 
-userRoutes.post('/login', UserController.login);
+usersRouter.route('/me')
+  .post(usersController.register)
+//   .patch(usersController.updateProfile)
+//   .delete(usersController.deleteAccount);
 
-// // Public routes
-// router.post('/register', validateRegister, UserController.register);
-// router.post('/login', validateLogin, UserController.login);
-
-// Protected routes (require authentication)
-// router.use(authenticate);
-
-userRoutes.get('/me', UserController.getProfile);
-userRoutes.patch('/me', UserController.updateProfile);
-userRoutes.delete('/me', UserController.deleteAccount);
-
-export default userRoutes;
+export default usersRouter;
