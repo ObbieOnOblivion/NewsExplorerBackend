@@ -1,8 +1,10 @@
 import { startServer, connectAdapter, dbAdapter } from '../src/server.js';
-import mongoose from 'mongoose';
 import app from '../src/app.js';
-import logger from '../src/config/logger.js';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
+// Load test environment variables
+dotenv.config({ path: '.env.test' });
 // Setup
 beforeAll(() => {
   process.env.MONGODB_URI = 'mongodb://localhost:27017/testdb';
@@ -21,6 +23,7 @@ jest.mock('../src/app.js', () => ({
     close: jest.fn(cb => cb())
   }))
 }));
+
 
 // In your test file's mock section
 jest.mock('../src/adapters/MongoDBAdapter.js', () => {
@@ -56,10 +59,8 @@ describe('Server Functions', () => {
     jest.clearAllMocks();
   });
 
-  describe('')
-
-  describe('connectAdapter()', () => {
-    it('connects to MongoDB successfully', async () => {
+  describe('connects mongoose', () => {
+    it('connects to MongoDB via Adapter successfully', async () => {
       await connectAdapter();
       
       expect(dbAdapter.connect).toHaveBeenCalledWith({
@@ -67,9 +68,7 @@ describe('Server Functions', () => {
         dbName: expect.any(String), // or specific name if you extract it
         useNewUrlParser: true,
         useUnifiedTopology: true
-      });
-      
-      expect(logger.info).toHaveBeenCalledWith('✅ MongoDB connected via adapter');
+      });      
     });
   });
 

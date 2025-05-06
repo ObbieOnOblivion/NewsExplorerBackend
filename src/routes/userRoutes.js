@@ -1,12 +1,16 @@
 import { Router } from 'express';
-import usersController from '../controllers/usersController.js';
-// import { validateRegister, validateLogin } from '../middlewares/validation.js';
+import UserController from '../controllers/usersController.js'
+import Validator from '../middlewares/validation.js';
 
 const usersRouter = Router();
+// const userController = new UserController(); // Create an instance
+
 
 usersRouter.route('/me')
-  .post(usersController.register)
+  .post(Validator.validateRegister ,UserController.register)
 //   .patch(usersController.updateProfile)
-//   .delete(usersController.deleteAccount);
 
+usersRouter.route('/') //?id=
+  .delete(UserController.delete);
+  
 export default usersRouter;

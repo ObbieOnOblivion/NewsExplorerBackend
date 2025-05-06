@@ -49,12 +49,12 @@ const UserSchema = new mongoose.Schema({
     minlength: 8,
     select: false
   },
-  Name: {
+  name: {
     type: String,
     required: true,
     trim: true,
     maxlength: 50
-  },
+  }, 
   lastLogin: Date,
   passwordChangedAt: Date,
   passwordResetToken: String,

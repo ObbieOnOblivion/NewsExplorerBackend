@@ -111,7 +111,7 @@
 
 
 
-
+// check naming conventions of files 
 
 import dotenv from 'dotenv';
 import express from 'express';
@@ -123,6 +123,7 @@ import sanitizeMiddleware from './middlewares/sanitizeMiddleware.js';
 import securityMiddlewares from './middlewares/securityMiddleware.js';
 import AppError from './utils/error/AppError.js';
 import router from './routes/index.js';
+
 
 const app = express();
 
