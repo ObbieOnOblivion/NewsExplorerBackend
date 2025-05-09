@@ -23,8 +23,7 @@ export class MongoDBAdapter {
    */
   async connect(config) {
     try {
-      // throw new Error("ddjdjdjdj")
-      // Set logger if provided in config
+
       if (config.logger) {
         this.#logger = config.logger;
       }
@@ -61,9 +60,6 @@ export class MongoDBAdapter {
     }
   }
 
-  /**
-   * Disconnect from MongoDB
-   */
   async disconnect() {
     try {
       if (this.#client) {
@@ -78,7 +74,6 @@ export class MongoDBAdapter {
     }
   }
 
-  // CRUD Operations (unchanged from your original)
   async create(collectionName, data) {
     this.#verifyConnection();
     const collection = this.#getCollection(collectionName);

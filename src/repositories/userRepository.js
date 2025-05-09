@@ -10,8 +10,12 @@ export class UserRepository {
       return this.model.create(userData); // Gets all Mongoose benefits
     }
   
-    async deleteUser(userData) {
-      return this.model.delete(userData); // Gets all Mongoose benefits
+    async deleteUser(id, userData) {
+      return this.model.findOneAndDelete(id, userData); // Gets all Mongoose benefits
+    }
+  
+    async updateUser(id, userData) {
+      return this.model.findOneAndUpdate(id, userData); // Gets all Mongoose benefits
     }
   
     // Use raw adapter for bulk/batch operations
