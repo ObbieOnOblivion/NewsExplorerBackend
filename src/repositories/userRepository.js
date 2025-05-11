@@ -13,10 +13,15 @@ export class UserRepository {
     async deleteUser(id, userData) {
       return this.model.findOneAndDelete(id, userData); // Gets all Mongoose benefits
     }
-  
-    async updateUser(id, userData) {
-      return this.model.findOneAndUpdate(id, userData); // Gets all Mongoose benefits
-    }
+
+    async updateUser(filter, update, options = {}) {
+      // Ensure we always return the updated document
+      const finalOptions = { 
+          new: true,
+          ...options 
+      };
+      return this.model.findOneAndUpdate(filter, update, finalOptions);
+  }
   
     // Use raw adapter for bulk/batch operations
 

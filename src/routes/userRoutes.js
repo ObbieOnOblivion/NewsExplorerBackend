@@ -8,7 +8,7 @@ const usersRouter = Router();
 
 usersRouter.route('/me')
   .post(Validator.validateRegister ,UserController.register)
-//   .patch(usersController.updateProfile)
+  .patch(Validator.validateUpdate, UserController.update)
 
 usersRouter.route('/') //?id=
   .delete(UserController.delete);

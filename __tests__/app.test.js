@@ -37,13 +37,11 @@ describe("different app requests", () => {
                 expect(response.statusCode).toBe(201);
                 expect(response.body).toHaveProperty('id');
             } catch (err) {
-                // Jest will automatically fail the test if any error is thrown
                 throw err;
             }
         });
 
         test("should reject duplicate emails", async () => {
-            // First create a user
             await request(app).post('/api/users').send({ email: 'dupe@test.com' });
 
             // Test duplicate case

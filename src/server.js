@@ -1,18 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// import { MongoDBAdapter } from '../src/adapters/MongoDBAdapter.js';
 import app from './app.js';
 import logger from './config/logger.js';
 import connectDB from './config/db.js'
+import { MongoDBAdapter } from './adapters/MongoDBAdapter.js';
+
+const dbAdapter = new MongoDBAdapter()
 
 app.locals.logger = logger;
 
-// Initialize MongoDB Adapter
-
-/**
- * Connect to MongoDB using the adapter
- */
 async function connectAdapter() {
   try {
     connectDB()
@@ -23,23 +20,17 @@ async function connectAdapter() {
   }
 }
 
-// async function gracefulShutdown(exitCode = 0) {
-//   try {
-//     app.locals.logger.info('🛑 Shutting down...');
-//     await dbAdapter.disconnect();
-//     server.close(() => {
-//       app.locals.logger.info('✅ Server closed');
-//       if (process.env.NODE_ENV !== 'test') {
-//         process.exit(exitCode);
-//       }
-//     });
-//   } catch (err) {
-//     app.locals.logger.error('Shutdown error:', err);
-//     if (process.env.NODE_ENV !== 'test') {
-//       process.exit(1);
-//     }
-//   }
-// }
+async function gracefulShutdown(exitCode = 0) {
+  try {
+    app.locals.logger.info('🛑 Shutting down...');
+    await dbAdapter.disconnect();
+  } catch (err) {
+    app.locals.logger.error('Shutdown error:', err);
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    }
+  }
+}
 
 /**
  * Start the server with graceful shutdown handling
@@ -68,13 +59,13 @@ async function startServer() {
       app.locals.logger.info(`🚀 Server running on port ${port}`);
     });
 
-    // process.on('SIGTERM', () => gracefulShutdown(0));
-    // process.on('SIGINT', () => gracefulShutdown(0)); // For Ctrl+C
+    process.on('SIGTERM', () => gracefulShutdown(0));
+    process.on('SIGINT', () => gracefulShutdown(0)); // For Ctrl+C
 
     return server;
   } catch (err) {
     app.locals.logger.error('🔥 Failed to start server:', err);
-    // await gracefulShutdown(1);
+    await gracefulShutdown(1);
   }
 }
 

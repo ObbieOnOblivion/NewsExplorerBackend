@@ -3,9 +3,8 @@ import app from '../src/app.js';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-// Load test environment variables
 dotenv.config({ path: '.env.test' });
-// Setup
+
 beforeAll(() => {
   process.env.MONGODB_URI = 'mongodb://localhost:27017/testdb';
   process.env.PORT = '3000';
@@ -15,7 +14,6 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// Mocks
 jest.mock('../src/app.js', () => ({
   locals: {},
   get: jest.fn(),
@@ -25,7 +23,6 @@ jest.mock('../src/app.js', () => ({
 }));
 
 
-// In your test file's mock section
 jest.mock('../src/adapters/MongoDBAdapter.js', () => {
   return {
     MongoDBAdapter: jest.fn().mockImplementation(() => ({

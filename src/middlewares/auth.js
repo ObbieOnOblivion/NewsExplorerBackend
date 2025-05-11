@@ -2,40 +2,39 @@ import JwtTools from '../utils/jwtTools.js';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors.js';
 
 /**
- * Protect routes - require valid JWT
+ * Middleware: Verifies JWT and attaches authenticated user context to the request.
+ * Rejects requests without valid tokens or with tokens linked to outdated credentials.
  */
 export const protect = async (req, res, next) => {
   try {
-    // 1) Get token from headers, cookies, or query
     let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
+
+    // Extract token from Authorization header or cookie
+    if (req.headers.authorization?.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     } else if (req.cookies?.jwt) {
       token = req.cookies.jwt;
     }
 
     if (!token) {
-      throw new UnauthorizedError('You are not logged in! Please log in to get access.');
+      throw new UnauthorizedError('Authentication required.');
     }
 
-    // 2) Verify token
+    // Decode and validate token signature
     const decoded = await JwtTools.verifyToken(token);
 
-    // 3) Check if user still exists (optional - could be DB call)
-    // const currentUser = await User.findById(decoded.id);
-    // if (!currentUser) {
-    //   throw new UnauthorizedError('The user belonging to this token no longer exists.');
-    // }
+    // Ensure associated user still exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      throw new UnauthorizedError('User no longer exists.');
+    }
 
-    // 4) Check if user changed password after token was issued
-    // if (currentUser.changedPasswordAfter(decoded.iat)) {
-    //   throw new UnauthorizedError('User recently changed password! Please log in again.');
-    // }
+    // Invalidate token if credentials were changed after issuance
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      throw new UnauthorizedError('Token expired due to recent password change.');
+    }
 
-    // Grant access to protected route
+    // Set user context for downstream access
     req.user = decoded;
     res.locals.user = decoded;
     next();
@@ -45,32 +44,31 @@ export const protect = async (req, res, next) => {
 };
 
 /**
- * Restrict routes to specific roles
- * @param  {...string} roles - Allowed roles
+ * Middleware: Enforces role-based access control.
+ * @param  {...string} roles - List of authorized roles for the route.
  */
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      throw new ForbiddenError('You do not have permission to perform this action');
+      throw new ForbiddenError('Insufficient permissions.');
     }
     next();
   };
 };
 
 /**
- * Generate and send JWT token
+ * Utility: Issues JWT, sets it as a cookie, and sends sanitized user response.
+ * @param {Object} user - Authenticated user object
+ * @param {number} statusCode - HTTP status code
+ * @param {Object} res - Express response object
  */
 export const sendTokenResponse = (user, statusCode, res) => {
-  // Create token
   const token = JwtTools.signToken({ id: user._id, role: user.role });
-
-  // Cookie options
   const cookieOptions = JwtTools.getCookieOptions();
 
-  // Send cookie
   res.cookie('jwt', token, cookieOptions);
 
-  // Remove sensitive data from output
+  // Exclude sensitive fields before response
   user.password = undefined;
   user.passwordChangedAt = undefined;
 

@@ -1,11 +1,9 @@
-// src/config/index.js
-
 import dotenv from 'dotenv';
 import Joi from 'joi';
 
-dotenv.config();
+dotenv.config(); // Load environment variables
 
-// Legacy default values
+// Default fallback config values
 const legacyConfig = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT) || 3000,
@@ -17,7 +15,7 @@ const legacyConfig = {
   apmServiceName: process.env.APM_SERVICE_NAME || 'professional-express-app',
 };
 
-// Joi schema for validation
+// Validate and normalize env vars using Joi
 const envVarsSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default(legacyConfig.env),
   PORT: Joi.number().default(legacyConfig.port),
@@ -34,10 +32,10 @@ const { value: validatedConfig, error } = envVarsSchema.validate(process.env);
 
 if (error) {
   console.error('Config validation error:', error.message);
-  // Don’t throw to keep compatibility
+  // Do not throw here to allow fallback usage
 }
 
-// Merge defaults with validated values
+// Merge validated values with legacy defaults
 const config = {
   ...legacyConfig,
   ...validatedConfig,

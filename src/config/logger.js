@@ -1,14 +1,15 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
-const { createLogger, format, transports } = winston;
-const { combine, timestamp, printf, colorize, errors } = format;
+const { combine, timestamp, printf, colorize, errors } = winston.format;
 
+// Custom log message format
 const logFormat = printf(({ level, message, timestamp, stack }) => {
   return `${timestamp} ${level}: ${stack || message}`;
 });
 
-const logger = createLogger({
+// Winston logger instance
+const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'debug',
   format: combine(
     colorize(),
@@ -17,11 +18,8 @@ const logger = createLogger({
     logFormat
   ),
   transports: [
-    new transports.Console({
-      handleExceptions: true,
-      handleRejections: true,
-    }),
-    new transports.File({
+    new winston.transports.Console({ handleExceptions: true, handleRejections: true }),
+    new winston.transports.File({
       filename: 'logs/error.log',
       level: 'error',
       handleExceptions: true,
@@ -38,7 +36,7 @@ const logger = createLogger({
     }),
   ],
   exceptionHandlers: [
-    new transports.File({
+    new winston.transports.File({
       filename: 'logs/exceptions.log',
       handleExceptions: true,
       handleRejections: true,
@@ -47,7 +45,6 @@ const logger = createLogger({
   exitOnError: false,
 });
 
-// Test the logger immediately
 logger.info('Logger initialized successfully');
 
 export default logger;
