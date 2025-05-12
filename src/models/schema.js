@@ -3,6 +3,8 @@ import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// .static for some functions
+
 /**
  * BaseSchema
  * Common fields shared across all schemas for consistency.
@@ -86,11 +88,10 @@ UserSchema.add(BaseSchema);
 UserSchema.methods.generateAuthToken = function() {
   return jwt.sign(
     { id: this._id, role: this.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
+    process.env.JWT_SECRET || 'fallback-secret-at-least-32-chars-long',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '100h' } 
   );
 };
-
 /**
  * Instance method: Validates user password
  * @param {string} candidatePassword - plaintext password

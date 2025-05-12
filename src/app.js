@@ -1,5 +1,10 @@
 // check naming conventions of files 
-// use validate.js to validate whats coming into the middlwares  
+// use validate.js to validate whats coming into the middlwares 
+// impliment AppError
+// consider learning TypeScript/C#/Java/Python (bulletproof your JavaScript first)
+// consider learning vercel .net and Next.js
+// validate .env vars 
+// test coverage looks weak 
 
 import dotenv from 'dotenv';
 import express from 'express';

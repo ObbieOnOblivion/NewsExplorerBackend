@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">41.86% </span>
+                <span class="strong">43.24% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>18/43</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">14.28% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>1/7</span>
+                <span class='fraction'>16/37</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">20% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>2/10</span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>1/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">45% </span>
+                <span class="strong">22.22% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>2/9</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">47.05% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>18/40</span>
+                <span class='fraction'>16/34</span>
             </div>
         
             
@@ -140,25 +140,9 @@
 <a name='L75'></a><a href='#L75'>75</a>
 <a name='L76'></a><a href='#L76'>76</a>
 <a name='L77'></a><a href='#L77'>77</a>
-<a name='L78'></a><a href='#L78'>78</a>
-<a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a>
-<a name='L82'></a><a href='#L82'>82</a>
-<a name='L83'></a><a href='#L83'>83</a>
-<a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a>
-<a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a>
-<a name='L88'></a><a href='#L88'>88</a>
-<a name='L89'></a><a href='#L89'>89</a>
-<a name='L90'></a><a href='#L90'>90</a>
-<a name='L91'></a><a href='#L91'>91</a>
-<a name='L92'></a><a href='#L92'>92</a>
-<a name='L93'></a><a href='#L93'>93</a>
-<a name='L94'></a><a href='#L94'>94</a>
-<a name='L95'></a><a href='#L95'>95</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L78'></a><a href='#L78'>78</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -166,22 +150,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -194,12 +166,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -254,30 +220,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import dotenv from 'dotenv';
 dotenv.config();
 &nbsp;
-import { MongoDBAdapter } from '../src/adapters/MongoDBAdapter.js';
 import app from './app.js';
 import logger from './config/logger.js';
+import connectDB from './config/db.js'
+import { MongoDBAdapter } from './adapters/MongoDBAdapter.js';
+&nbsp;
+const dbAdapter = new MongoDBAdapter()
 &nbsp;
 app.locals.logger = logger;
 &nbsp;
-// Initialize MongoDB Adapter
-const dbAdapter = new MongoDBAdapter();
-dbAdapter.setLogger(logger)
-&nbsp;
-/**
- * Connect to MongoDB using the adapter
- */
 async function connectAdapter() {
   try {
-    await dbAdapter.connect({
-      connectionString: process.env.MONGODB_URI,
-      dbName: 'testdb',
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    
+    connectDB()
     logger.info('✅ MongoDB connected via adapter');
-    app.locals.db = dbAdapter;
   } catch (err) {
 <span class="cstat-no" title="statement not covered" >    logger.error('❌ MongoDB connection error:', err);</span>
 <span class="cstat-no" title="statement not covered" >    throw err;</span>
@@ -288,12 +243,6 @@ async function <span class="fstat-no" title="function not covered" >gracefulShut
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    app.locals.logger.info('🛑 Shutting down...');</span>
 <span class="cstat-no" title="statement not covered" >    await dbAdapter.disconnect();</span>
-<span class="cstat-no" title="statement not covered" >    server.close(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      app.locals.logger.info('✅ Server closed');</span>
-<span class="cstat-no" title="statement not covered" >      if (process.env.NODE_ENV !== 'test') {</span>
-<span class="cstat-no" title="statement not covered" >        process.exit(exitCode);</span>
-      }
-    });
   } catch (err) {
 <span class="cstat-no" title="statement not covered" >    app.locals.logger.error('Shutdown error:', err);</span>
 <span class="cstat-no" title="statement not covered" >    if (process.env.NODE_ENV !== 'test') {</span>
@@ -345,14 +294,14 @@ startServer().catch(<span class="fstat-no" title="function not covered" >(e</spa
 <span class="cstat-no" title="statement not covered" >  process.exit(1);</span>
 });
 &nbsp;
-export { app, connectAdapter, startServer, dbAdapter };</pre></td></tr></table></pre>
+export { app, connectAdapter, startServer };</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-06T00:30:03.008Z
+                at 2025-05-12T04:57:18.365Z
             </div>
         <script src="../prettify.js"></script>
         <script>

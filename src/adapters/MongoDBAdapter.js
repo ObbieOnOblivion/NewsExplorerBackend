@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+// consider thinking in the direction of TypeOrm/Prisma/Sequelize
 
 export class MongoDBAdapter {
   #client = null;
